@@ -1,7 +1,7 @@
 # sales_manager_bot
 AI-powered Telegram bot for sales managers. Built with n8n, OpenAI, Supabase, and a Google Drive-based RAG knowledge system.
 
-#verview
+Overview
 
 1️⃣ `bot_config.json`
 Main Telegram bot workflow:
