@@ -1,0 +1,644 @@
+{
+  "name": "бот для продажников",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        144
+      ],
+      "id": "a264347c-8a01-42fc-8a24-edf53c510a37",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $json.sessionId }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id || $json.message.from.id }}"
+            },
+            {
+              "fieldId": "username",
+              "fieldValue": "={{ $json.username || $json.message.from.username }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $json.text }}"
+            },
+            {
+              "fieldId": "metadata",
+              "fieldValue": "={{ JSON.stringify($json) }}"
+            },
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $json.first_name || $json.message.from.first_name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        -448
+      ],
+      "id": "f6c892f0-afc1-4cfc-8a25-362bf9d29f66",
+      "name": "Save User Message",
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $('Set Final Text').item.json.sessionId }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Set Final Text').item.json.user_id }}"
+            },
+            {
+              "fieldId": "username",
+              "fieldValue": "={{ $('Set Final Text').item.json.username }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "assistant"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $('ИНФО АГЕНТ').item.json.output }}"
+            },
+            {
+              "fieldId": "metadata",
+              "fieldValue": "={{ JSON.stringify($('Set Final Text').item.json.update || $('Set Final Text').item.json) }}"
+            },
+            {
+              "fieldId": "first_name",
+              "fieldValue": "={{ $('Set Final Text').item.json.first_name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -448
+      ],
+      "id": "e35200d1-df41-4504-866f-229ccaae8f18",
+      "name": "Save Bot Message",
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Set Final Text').item.json.text }}",
+        "options": {
+          "systemMessage": "You are Gulnur GV Sales Assistant, a Telegram bot that helps beginner sales managers sell Gulnur GV breastfeeding courses.\n\nMission:\nCoach new sales reps with clear, step-by-step guidance.\nAnswer their questions using the company’s knowledge on Google Drive.\nKeep replies short, practical, and action-oriented.\nVoice & Style:\nFriendly, supportive, and confident.\nWrite in Russian by default (switch language if the user asks).\nTelegram-friendly: short paragraphs, bullets, and clear CTAs; minimal emojis.\nKnowledge Sources:\nPrimary source of truth: the Google Drive knowledge base.\nDrive folder: {{N8N}}.\nAlways pull the most relevant snippets from Drive before answering. If a requested doc isn’t found, say so and offer next steps.\nWhen you use Drive materials:\nPrefer the latest file version.\nEcho back the exact policy/price found.\nIf policies differ across docs, state the conflict and follow the newest/most authoritative source.\nWhat to do (priority order):\nUnderstand intent of the rep’s question (pricing, objections, lead qualification, scripts, CRM, policies, promos, etc.).\nRetrieve the answer from Drive (and mention the doc title in brackets, e.g., [Pricing v3.xlsx]).\nAnswer concisely.\nOutput rules:\nBe accurate, concise, and practical.\nNever invent prices, policies, or promos not found on Drive.\nIf uncertain, say so and propose the safest next step.\nKeep messages Telegram-sized (aim < 8 lines; use bullets).\nDefault to Russian; switch on request.\nIMPORTANT RULES:\n\n1. GREETINGS & SMALL TALK - Reply naturally WITHOUT [NO_INFO]:\n   - Приветствия: привет, здравствуйте, добрый день, hey, hello\n   - Благодарности: спасибо, thanks\n   - Общие фразы: как дела, что нового\n   \n2. REAL QUESTIONS - If you cannot find answer in Google Drive:\n   - Start reply with: \"[NO_INFO]\"\n   - Then provide a polite response\n\nExamples:\n❌ User: \"Привет\" → Do NOT use [NO_INFO], just say \"Здравствуйте! Чем могу помочь?\"\n✅ User: \"Какая цена курса Х?\" → If no info in Drive: \"[NO_INFO] К сожалению...\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1216,
+        -448
+      ],
+      "id": "fd99ed13-9bf9-4207-aa42-1d758db12b07",
+      "name": "ИНФО АГЕНТ",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        0
+      ],
+      "id": "3bc23a71-0cc5-4491-9701-8b776fdf7127",
+      "name": "DATA BASE",
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "documents",
+        "description": "You're managing a database for Gulnur GV, who sells breastfeeding courses. You need to go into your folder and search for answers to clients' questions and respond to them.\n",
+        "topK": "=30"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        -272
+      ],
+      "id": "dff109af-db20-4200-b11f-9a39ab9ad20c",
+      "name": "DATA_TOOL"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -1088,
+        -256
+      ],
+      "id": "e6f09b55-1264-4e0d-929f-662f71e41e45",
+      "name": "ВРЕМЕННАЯ ПАМЯТЬ 1",
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_POSTGRES_CREDENTIAL_ID",
+          "name": "Postgres Supa"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1216,
+        -256
+      ],
+      "id": "cd4dd064-2827-4422-a053-d9f959f0ae27",
+      "name": "МОЗГ 1",
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe7ecc99-e1e8-4a5e-bdd6-6fce9757b234",
+              "name": "text",
+              "value": "={{ $json.text || $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "8386c97a-d1b9-4000-9e17-86c2158e91af",
+              "name": "sessionId",
+              "value": "=={{ 'user_' + ( $json.userId\n  || $json.subscriber_id\n  || ($json.subscriber && $json.subscriber.id)\n  || ($json.contact && $json.contact.id)\n  || ($json.user && $json.user.id)\n  || ($json.from && $json.from.id)\n  || ($json.sender && $json.sender.id) ) }}\n",
+              "type": "string"
+            },
+            {
+              "id": "877d9358-6785-4299-be83-7c78fd41924f",
+              "name": "user_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c58ae87e-c307-4af6-945f-bb8350aafc3d",
+              "name": "username",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.username }}",
+              "type": "string"
+            },
+            {
+              "id": "a44439db-9b02-4093-9cc9-19af6c9e1a3c",
+              "name": "first_name",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d65b621c-b717-408d-b88c-20690ebb9b90",
+              "name": "update",
+              "value": "={{ $('Telegram Trigger').item.json }}",
+              "type": "string"
+            },
+            {
+              "id": "726d71e0-9c5b-4857-9f38-56ff2ba2b801",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "706772bb-59d6-4d24-b704-c49f8591fbcb",
+      "name": "Set Final Text",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1840,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        -128
+      ],
+      "id": "8d0594ba-d40f-4f89-acd0-b57fb2ef23eb",
+      "name": "4o-mini",
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2064,
+        -448
+      ],
+      "id": "57634603-3df5-4dbd-8ef6-360902ba2edb",
+      "name": "Telegram Trigger",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        -496
+      ],
+      "id": "b609b8f4-173d-4c8c-b7c0-3263569195bc",
+      "name": "Send a text message",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "46ed6963-ad83-4bac-b4d6-851dd43c4bbf",
+              "leftValue": "={{ $json.foundInfo }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -448
+      ],
+      "id": "9c0bf02c-245d-4824-ad2c-b57974b98e42",
+      "name": "Is Unknown?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.item.json.output;\nconst userMessage = $('Set Final Text').item.json.text.toLowerCase().trim();\n\n// Список приветствий и общих фраз\nconst greetings = ['привет', 'здравствуй', 'добрый день', 'добрый вечер', \n                   'доброе утро', 'hi', 'hello', 'hey', 'спасибо', 'thanks',\n                   'как дела', 'что нового'];\n\nconst isGreeting = greetings.some(greeting => \n  userMessage.includes(greeting) && userMessage.length < 30\n);\n\n// Если приветствие - игнорируем [NO_INFO]\nconst foundInfo = isGreeting || !output.includes('[NO_INFO]');\n\nreturn {\n  json: {\n    output: output.replace('[NO_INFO]', '').trim(),\n    foundInfo: foundInfo,\n    originalQuestion: $('Set Final Text').item.json.text,\n    userId: $('Set Final Text').item.json.user_id,\n    username: $('Set Final Text').item.json.username || 'без username',\n    firstName: $('Set Final Text').item.json.first_name,\n    sessionId: $('Set Final Text').item.json.sessionId\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -448
+      ],
+      "id": "1d04fd9e-53a0-4b6e-96f4-b69117b39ce2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "chatId": "ADMIN_CHAT_ID",
+        "text": "=🔔 Новый вопрос без ответа!  \n👤 От: {{ $json.firstName }} (@{{ $json.username }}) \n📝 ID: {{ $json.userId }}  \n❓ Вопрос: {{ $json.originalQuestion }}  🤖 Ответ бота: {{ $json.output }}  \n⚠️ Требуется обновление базы знаний в Google Drive",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        -288
+      ],
+      "id": "3d151036-3a45-4236-ab73-92c778c1e99c",
+      "name": "Send a text message1",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Спасибо за ваш вопрос! 🙏                  \nК сожалению, у меня пока нет точной информации по этому вопросу в базе знаний.  \n\n✅ Я уже передал ваш вопрос руководителю \n✅ Вам ответят в ближайшее время с точной информацией  \nПожалуйста, ожидайте ответа. Мы ценим ваше терпение! 💙",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        -288
+      ],
+      "id": "b8762cde-b895-436b-a849-348c5f9c62f8",
+      "name": "Send a text message2",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "DATA BASE",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save User Message": {
+      "main": [
+        [
+          {
+            "node": "ИНФО АГЕНТ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ИНФО АГЕНТ": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DATA BASE": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "DATA_TOOL",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DATA_TOOL": {
+      "ai_tool": [
+        [
+          {
+            "node": "ИНФО АГЕНТ",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ВРЕМЕННАЯ ПАМЯТЬ 1": {
+      "ai_memory": [
+        [
+          {
+            "node": "ИНФО АГЕНТ",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "МОЗГ 1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ИНФО АГЕНТ",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Final Text": {
+      "main": [
+        [
+          {
+            "node": "Save User Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "DATA_TOOL",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Final Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Save Bot Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Unknown?": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Is Unknown?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        [
+          {
+            "node": "Save Bot Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7b36b391-3d62-4f83-bdb5-6bb5cba29262",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "17c497a17c13ffacff49e2f06382648f8cfb2c0c009c2d515122676bd6fb533b"
+  },
+  "id": "IAqqLst9uFISg8uj",
+  "tags": [
+    {
+      "createdAt": "2025-10-06T10:44:09.269Z",
+      "updatedAt": "2025-10-06T10:44:09.269Z",
+      "id": "FJI63uR25bF7Q9ki",
+      "name": "GulnurGV"
+    }
+  ]
+}
